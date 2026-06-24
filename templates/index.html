@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pinbucket</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Pinbucket</h1>
+  </header>
+
+  <main>
+    <div class="add-bar">
+      <div class="search-wrapper">
+        <input type="text" id="search" placeholder="Search a place on Wikipedia..." autocomplete="off">
+        <div id="search-results" class="search-results hidden"></div>
+      </div>
+      <button id="manual-btn" class="btn-secondary">Add manually</button>
+    </div>
+
+    <div id="preview" class="preview-card hidden">
+      <div class="preview-inner">
+        <img id="preview-img" src="" alt="">
+        <div class="preview-info">
+          <h2 id="preview-title"></h2>
+          <p id="preview-desc"></p>
+          <div class="preview-meta">
+            <span id="preview-coords"></span>
+            <a id="preview-map" href="#" target="_blank" class="map-link hidden">Open in maps</a>
+          </div>
+          <textarea id="preview-note" placeholder="Add a personal note..." rows="2"></textarea>
+          <div class="preview-actions">
+            <button id="save-btn" class="btn-primary">Save to board</button>
+            <button id="cancel-preview" class="btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="manual-form" class="manual-form hidden">
+      <h3>Add a place manually</h3>
+      <input type="text" id="manual-name" placeholder="Place name">
+      <input type="text" id="manual-image" placeholder="Image URL (optional)">
+      <textarea id="manual-desc" placeholder="Description (optional)" rows="3"></textarea>
+      <div class="manual-row">
+        <input type="text" id="manual-lat" placeholder="Latitude (optional)">
+        <input type="text" id="manual-lon" placeholder="Longitude (optional)">
+      </div>
+      <textarea id="manual-note" placeholder="Personal note (optional)" rows="2"></textarea>
+      <button id="manual-save" class="btn-primary">Save</button>
+      <button id="cancel-manual" class="btn-secondary">Cancel</button>
+    </div>
+
+    <div id="board" class="masonry"></div>
+    <div id="empty" class="empty-state">No places saved yet. Search above to add your first one.</div>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <img id="modal-img" src="" alt="">
+      <div class="modal-body">
+        <h2 id="modal-title"></h2>
+        <p id="modal-desc"></p>
+        <div class="modal-meta">
+          <a id="modal-map" href="#" target="_blank" class="map-link hidden">Open in maps</a>
+        </div>
+        <p id="modal-note" class="modal-note"></p>
+        <button id="modal-delete" class="btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
