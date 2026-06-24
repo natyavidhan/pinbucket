@@ -1,5 +1,30 @@
+# Python
 __pycache__/
-*.pyc
-locations.db
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
 venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# App
+locations.db
+
+# Secrets
 .env
+*.env
