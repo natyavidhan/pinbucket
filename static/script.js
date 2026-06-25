@@ -27,16 +27,31 @@ function renderBoard(locations) {
     card.className = 'card';
     card.dataset.id = loc.id;
 
-    card.innerHTML = `
-      ${loc.image_url
-        ? `<img src="${esc(loc.image_url)}" alt="${esc(loc.name)}" loading="lazy">`
-        : `<div class="card-image-placeholder">&#127758;</div>`
-      }
-      <div class="card-body">
-        <h3>${esc(loc.name)}</h3>
-        ${loc.description ? `<p>${esc(firstSentences(loc.description, 2))}</p>` : ''}
-        ${loc.note ? `<div class="card-note">${esc(loc.note)}</div>` : ''}
-      </div>`;
+    const descSnippet = loc.description ? esc(firstSentences(loc.description, 2)) : '';
+    const noteSnippet = loc.note ? `<div class="card-note-tag">"${esc(loc.note)}"</div>` : '';
+
+    if (loc.image_url) {
+      card.innerHTML = `
+        <img src="${esc(loc.image_url)}" alt="${esc(loc.name)}" loading="lazy">
+        <div class="card-overlay">
+          <div class="card-name">${esc(loc.name)}</div>
+          <div class="card-details">
+            ${descSnippet ? `<div class="card-desc">${descSnippet}</div>` : ''}
+            ${noteSnippet}
+          </div>
+        </div>`;
+    } else {
+      card.innerHTML = `
+        <div class="card-placeholder" style="min-height: 200px;">
+          <div class="card-overlay">
+            <div class="card-name">${esc(loc.name)}</div>
+            <div class="card-details">
+              ${descSnippet ? `<div class="card-desc">${descSnippet}</div>` : ''}
+              ${noteSnippet}
+            </div>
+          </div>
+        </div>`;
+    }
 
     card.addEventListener('click', () => openModal(loc));
     board.appendChild(card);
