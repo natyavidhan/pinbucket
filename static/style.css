@@ -466,6 +466,22 @@ main {
   line-height: 1.4;
 }
 
+.card-ref-badge {
+  margin-top: 6px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.15);
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  backdrop-filter: blur(2px);
+}
+
+.ref-icon {
+  margin-right: 4px;
+  font-size: 12px;
+}
+
 /* Placeholder card when no image */
 .card-placeholder {
   width: 100%;
@@ -699,17 +715,20 @@ main {
 }
 
 .modal-ref-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   background: var(--ref-bg);
   color: var(--ref-color);
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-radius: 14px;
   font-size: 13px;
+  font-weight: 500;
   text-decoration: none;
-  max-width: 250px;
+  max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: background 0.2s;
 }
 
 .modal-ref-link:hover { background: var(--ref-hover); }

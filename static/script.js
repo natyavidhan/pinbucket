@@ -86,6 +86,7 @@ function renderBoard(locations) {
 
     const descSnippet = loc.description ? esc(firstSentences(loc.description, 2)) : '';
     const noteSnippet = loc.note ? `<div class="card-note-tag">"${esc(loc.note)}"</div>` : '';
+    const refBadge = loc.refs && loc.refs.length ? `<div class="card-ref-badge">\ud83d\udd17 ${loc.refs.length} ref${loc.refs.length > 1 ? 's' : ''}</div>` : '';
 
     if (loc.image_url) {
       card.innerHTML = `
@@ -95,6 +96,7 @@ function renderBoard(locations) {
           <div class="card-name">${esc(loc.name)}</div>
           <div class="card-details">
             ${descSnippet ? `<div class="card-desc">${descSnippet}</div>` : ''}
+            ${refBadge}
             ${noteSnippet}
           </div>
         </div>`;
@@ -106,6 +108,7 @@ function renderBoard(locations) {
             <div class="card-name">${esc(loc.name)}</div>
             <div class="card-details">
               ${descSnippet ? `<div class="card-desc">${descSnippet}</div>` : ''}
+              ${refBadge}
               ${noteSnippet}
             </div>
           </div>
@@ -342,10 +345,22 @@ function renderModalTags(tags) {
 
 function renderModalRefs(refs) {
   const el = $('#modal-refs');
-  if (!refs || refs.length === 0) { el.innerHTML = ''; return; }
-  el.innerHTML = refs.map((url) =>
-    `<a href="${esc(url)}" target="_blank" class="modal-ref-link">${esc(truncate(url, 50))}</a>`
-  ).join('');
+  const label = document.querySelector('.refs-label');
+  if (!refs || refs.length === 0) {
+    el.innerHTML = '';
+    if (label) label.style.display = 'none';
+    return;
+  }
+  if (label) label.style.display = '';
+  const icons = { instagram: '\ud83d\udcf1', tiktok: '\ud83c\udfa5', youtube: '\u25b6\ufe0f' };
+  el.innerHTML = refs.map((url) => {
+    let icon = '\ud83d\udd17';
+    if (url.includes('instagram')) icon = '\ud83d\udcf1';
+    else if (url.includes('tiktok')) icon = '\ud83c\udfa5';
+    else if (url.includes('youtube') || url.includes('youtu.be')) icon = '\u25b6\ufe0f';
+    return `<a href="${esc(url)}" target="_blank" class="modal-ref-link">
+      <span class="ref-icon">${icon}</span>${esc(truncate(url, 45))}</a>`;
+  }).join('');
 }
 
 // --- Edit mode in modal ---
