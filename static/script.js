@@ -130,7 +130,7 @@ function showPreview(data) {
 
   if (data.lat && data.lon) {
     $('#preview-coords').textContent = `${data.lat.toFixed(4)}, ${data.lon.toFixed(4)}`;
-    $('#preview-map').href = `https://www.openstreetmap.org/?mlat=${data.lat}&mlon=${data.lon}`;
+    $('#preview-map').href = `https://www.google.com/maps?q=${data.lat},${data.lon}`;
     $('#preview-map').classList.remove('hidden');
   } else {
     $('#preview-coords').textContent = '';
@@ -221,7 +221,7 @@ function openModal(loc) {
   $('#modal-note').textContent = loc.note || '';
 
   if (loc.lat && loc.lon) {
-    $('#modal-map').href = `https://www.openstreetmap.org/?mlat=${loc.lat}&mlon=${loc.lon}`;
+    $('#modal-map').href = `https://www.google.com/maps?q=${loc.lat},${loc.lon}`;
     $('#modal-map').classList.remove('hidden');
   } else {
     $('#modal-map').classList.add('hidden');
