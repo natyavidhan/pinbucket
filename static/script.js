@@ -473,6 +473,145 @@ function firstSentences(text, n) {
   return match ? match[0].trim() : text;
 }
 
+// --- Tabs ---
+document.querySelectorAll('.tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    $('#tab-search').classList.toggle('hidden', target !== 'search');
+    $('#tab-identify').classList.toggle('hidden', target !== 'identify');
+  });
+});
+
+// --- Identify tab ---
+let identifyFiles = [];
+
+$('#identify-dropzone').addEventListener('click', () => {
+  $('#identify-input').click();
+});
+
+$('#identify-input').addEventListener('change', (e) => {
+  addFiles(e.target.files);
+});
+
+['dragenter', 'dragover'].forEach((evt) => {
+  $('#identify-dropzone').addEventListener(evt, (e) => {
+    e.preventDefault();
+    $('#identify-dropzone').classList.add('drag-over');
+  });
+});
+
+['dragleave', 'drop'].forEach((evt) => {
+  $('#identify-dropzone').addEventListener(evt, (e) => {
+    e.preventDefault();
+    $('#identify-dropzone').classList.remove('drag-over');
+  });
+});
+
+$('#identify-dropzone').addEventListener('drop', (e) => {
+  addFiles(e.dataTransfer.files);
+});
+
+function addFiles(fileList) {
+  const newFiles = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
+  if (identifyFiles.length + newFiles.length > 5) {
+    alert('Max 5 images.');
+    return;
+  }
+  identifyFiles.push(...newFiles);
+  renderIdentifyPreviews();
+}
+
+function renderIdentifyPreviews() {
+  const container = $('#identify-previews');
+  const result = $('#identify-result');
+  result.classList.add('hidden');
+
+  if (identifyFiles.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = identifyFiles.map((f, i) => `
+    <div class="preview-thumb">
+      <img src="${URL.createObjectURL(f)}" alt="">
+      <button class="preview-thumb-remove" data-i="${i}">&times;</button>
+    </div>
+  `).join('');
+
+  const btn = document.createElement('button');
+  btn.className = 'btn-primary';
+  btn.textContent = `Analyze ${identifyFiles.length} image${identifyFiles.length > 1 ? 's' : ''}`;
+  btn.addEventListener('click', analyzeImages);
+  container.appendChild(btn);
+
+  container.querySelectorAll('.preview-thumb-remove').forEach((b) => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      identifyFiles.splice(parseInt(b.dataset.i), 1);
+      renderIdentifyPreviews();
+    });
+  });
+}
+
+async function analyzeImages() {
+  const result = $('#identify-result');
+  result.classList.remove('hidden');
+  result.innerHTML = '<div class="identify-loading">Analyzing screenshots&hellip;</div>';
+
+  const form = new FormData();
+  identifyFiles.forEach((f) => form.append('images', f));
+
+  try {
+    const resp = await fetch('/api/identify', { method: 'POST', body: form });
+    const data = await resp.json();
+
+    if (data.error) {
+      result.innerHTML = `<div class="identify-clues"><p>${esc(data.error)}</p></div>`;
+      return;
+    }
+
+    if (data.confidence === 'high' && data.name) {
+      result.innerHTML = `
+        <div class="identify-match">
+          <div class="identify-match-icon">&#127758;</div>
+          <strong>${esc(data.name)}</strong>
+          <p>${esc(data.clues || '')}</p>
+          <button class="btn-primary identify-search-btn">Search this place</button>
+        </div>`;
+      result.querySelector('.identify-search-btn').addEventListener('click', () => {
+        $('#search').value = data.name;
+        document.querySelector('.tab[data-tab="search"]').click();
+        selectResult(data.name);
+      });
+    } else {
+      result.innerHTML = `
+        <div class="identify-clues">
+          <strong>Not 100% sure, but here's what I see:</strong>
+          <p>${esc(data.clues || 'No clues returned.')}</p>
+          ${(data.suggestions || []).length ? `
+            <div class="identify-suggestions">
+              <span>Try searching for:</span>
+              ${data.suggestions.map((s) => `
+                <button class="btn-secondary clue-search-btn" data-q="${esc(s)}">${esc(s)}</button>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>`;
+      result.querySelectorAll('.clue-search-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          $('#search').value = btn.dataset.q;
+          document.querySelector('.tab[data-tab="search"]').click();
+          doSearch(btn.dataset.q);
+        });
+      });
+    }
+  } catch {
+    result.innerHTML = '<div class="identify-clues"><p>Failed to analyze. Is your API key set?</p></div>';
+  }
+}
+
 // --- Theme toggle ---
 function applyTheme(dark) {
   document.body.classList.toggle('dark', dark);

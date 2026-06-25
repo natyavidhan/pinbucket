@@ -1,7 +1,21 @@
 import sqlite3
 import json
+import os
+import base64
 import requests
 from flask import Flask, request, jsonify, render_template
+
+def _load_env():
+    env_path = os.path.join(os.path.dirname(__file__), '.env')
+    if os.path.isfile(env_path):
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    k, v = line.split('=', 1)
+                    os.environ.setdefault(k.strip(), v.strip())
+
+_load_env()
 
 app = Flask(__name__)
 app.config.setdefault('DB_PATH', 'locations.db')
@@ -103,6 +117,68 @@ def preview():
         'lat': data.get('coordinates', {}).get('lat'),
         'lon': data.get('coordinates', {}).get('lon'),
     })
+
+def _gemini_identify(images):
+    """Send images to Gemini Vision and return structured result."""
+    from google import genai
+
+    api_key = os.environ.get('GEMINI_API_KEY', '')
+    if not api_key:
+        return {'error': 'Set GEMINI_API_KEY env var to use this feature.'}
+
+    client = genai.Client(api_key=api_key)
+
+    parts = []
+    for img in images:
+        parts.append(genai.types.Part.from_bytes(
+            data=img['data'],
+            mime_type=img['mime'],
+        ))
+
+    parts.append(genai.types.Part.from_text(text="""Analyze these screenshots from a social media video of a beautiful location.
+Return ONLY a JSON object with these keys and NOTHING ELSE:
+{
+  "confidence": "high" or "low",
+  "name": "specific place name if confidence is high, otherwise null",
+  "clues": "2-3 sentences describing the landscape, country/region, vegetation, geological features, or anything distinctive",
+  "suggestions": ["search term 1", "search term 2", "search term 3"]
+}"""))
+
+    try:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=parts,
+        )
+        raw = response.text.strip()
+        if raw.startswith('```'):
+            raw = raw.split('\n', 1)[1]
+            if raw.endswith('```'):
+                raw = raw[:-3]
+        return json.loads(raw)
+    except Exception as e:
+        return {'error': str(e)}
+
+
+@app.route('/api/identify', methods=['POST'])
+def identify():
+    uploaded = request.files.getlist('images')
+    if not uploaded or len(uploaded) == 0:
+        return jsonify({'error': 'Upload at least one image.'}), 400
+    if len(uploaded) > 5:
+        return jsonify({'error': 'Max 5 images.'}), 400
+
+    images = []
+    for f in uploaded:
+        if not f.content_type or not f.content_type.startswith('image/'):
+            continue
+        images.append({'data': f.read(), 'mime': f.content_type})
+
+    if not images:
+        return jsonify({'error': 'No valid images found.'}), 400
+
+    result = _gemini_identify(images)
+    return jsonify(result)
+
 
 @app.route('/api/locations', methods=['GET', 'POST'])
 def locations():

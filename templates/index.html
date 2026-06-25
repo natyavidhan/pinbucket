@@ -13,12 +13,34 @@
   </header>
 
   <main>
-    <div class="add-bar">
-      <div class="search-wrapper">
-        <input type="text" id="search" placeholder="Search a place on Wikipedia..." autocomplete="off">
-        <div id="search-results" class="search-results hidden"></div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="search">Search Wikipedia</button>
+      <button class="tab" data-tab="identify">Identify from screenshots</button>
+    </nav>
+
+    <div id="tab-search" class="tab-panel">
+      <div class="add-bar">
+        <div class="search-wrapper">
+          <input type="text" id="search" placeholder="Search a place on Wikipedia..." autocomplete="off">
+          <div id="search-results" class="search-results hidden"></div>
+        </div>
+        <button id="manual-btn" class="btn-secondary">Add manually</button>
       </div>
-      <button id="manual-btn" class="btn-secondary">Add manually</button>
+    </div>
+
+    <div id="tab-identify" class="tab-panel hidden">
+      <div class="identify-box">
+        <div id="identify-dropzone" class="dropzone">
+          <div class="dropzone-inner">
+            <span class="dropzone-icon">📸</span>
+            <p>Drop 2-3 landscape screenshots here, or click to upload</p>
+            <p class="dropzone-hint">Works best with Reel screenshots showing the scenery</p>
+            <input type="file" id="identify-input" accept="image/*" multiple hidden>
+          </div>
+        </div>
+        <div id="identify-previews" class="identify-previews"></div>
+        <div id="identify-result" class="identify-result hidden"></div>
+      </div>
     </div>
 
     <div id="preview" class="preview-card hidden">

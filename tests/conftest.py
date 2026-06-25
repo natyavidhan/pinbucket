@@ -60,6 +60,28 @@ def fake_get(url, **kwargs):
     return FakeResp(404, {})
 
 
+def fake_gemini_identify(images):
+    return {
+        "confidence": "high",
+        "name": "Trolltunga",
+        "clues": "Glacial rock formation, Norwegian fjord landscape.",
+        "suggestions": ["Trolltunga Norway", "Preikestolen", "Kjeragbolten"],
+    }
+
+
+def fake_gemini_low_confidence(images):
+    return {
+        "confidence": "low",
+        "name": None,
+        "clues": "High-altitude steppe with red sandstone formations, Central Asia.",
+        "suggestions": ["Kazakhstan canyon", "Charyn Canyon", "red rock formation Asia"],
+    }
+
+
+def fake_gemini_error(images):
+    return {"error": "API key not set"}
+
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr("app.requests.get", fake_get)

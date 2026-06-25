@@ -250,3 +250,79 @@ def test_update_name_and_description(client):
     loc = client.get("/api/locations").get_json()[0]
     assert loc["name"] == "New Name"
     assert loc["description"] == "New desc"
+
+
+# ---- Identify ----
+
+def write_binary_upload(data, content_type="image/jpeg"):
+    """Create a multipart/form-data body with an image file."""
+    boundary = b"----testboundary"
+    body = (
+        b"--" + boundary + b"\r\n"
+        b'Content-Disposition: form-data; name="images"; filename="test.jpg"\r\n'
+        b"Content-Type: " + content_type.encode() + b"\r\n\r\n"
+        + data + b"\r\n"
+        b"--" + boundary + b"--\r\n"
+    )
+    return body, (b"multipart/form-data; boundary=" + boundary).decode()
+
+
+def test_identify_high_confidence(client, monkeypatch):
+    monkeypatch.setattr("app._gemini_identify", __import__("tests.conftest", fromlist=["conftest"]).fake_gemini_identify)
+
+    from tests.conftest import fake_gemini_identify
+    monkeypatch.setattr("tests.conftest.fake_gemini_identify", fake_gemini_identify, raising=False)
+    monkeypatch.setattr("app._gemini_identify", fake_gemini_identify)
+
+    body, content_type = write_binary_upload(b"\xff\xd8\xff\xe0\x00\x10JFIF")
+    resp = client.post("/api/identify",
+                       data=body, content_type=content_type)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["confidence"] == "high"
+    assert data["name"] == "Trolltunga"
+
+
+def test_identify_low_confidence(client, monkeypatch):
+    from tests.conftest import fake_gemini_low_confidence
+    monkeypatch.setattr("app._gemini_identify", fake_gemini_low_confidence)
+
+    body, content_type = write_binary_upload(b"\xff\xd8\xff\xe0\x00\x10JFIF")
+    resp = client.post("/api/identify",
+                       data=body, content_type=content_type)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["confidence"] == "low"
+    assert data["name"] is None
+    assert len(data["suggestions"]) == 3
+
+
+def test_identify_no_images(client):
+    resp = client.post("/api/identify")
+    assert resp.status_code == 400
+
+
+def test_identify_api_error(client, monkeypatch):
+    from tests.conftest import fake_gemini_error
+    monkeypatch.setattr("app._gemini_identify", fake_gemini_error)
+
+    body, content_type = write_binary_upload(b"\xff\xd8\xff\xe0\x00\x10JFIF")
+    resp = client.post("/api/identify",
+                       data=body, content_type=content_type)
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert "error" in data
+
+
+def test_identify_returns_clues_and_suggestions(client, monkeypatch):
+    from tests.conftest import fake_gemini_low_confidence
+    monkeypatch.setattr("app._gemini_identify", fake_gemini_low_confidence)
+
+    body, content_type = write_binary_upload(b"\xff\xd8\xff\xe0\x00\x10JFIF")
+    resp = client.post("/api/identify",
+                       data=body, content_type=content_type)
+    data = resp.get_json()
+    assert "clues" in data
+    assert isinstance(data["clues"], str)
+    assert len(data["clues"]) > 5
+    assert "Kazakhstan" in str(data["suggestions"])
