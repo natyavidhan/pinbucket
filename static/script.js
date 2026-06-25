@@ -168,6 +168,7 @@ $('#save-btn').addEventListener('click', async () => {
       name: selectedPreview.title,
       description: selectedPreview.description,
       image_url: selectedPreview.image_url,
+      image_urls: selectedPreview.image_urls || [],
       lat: selectedPreview.lat,
       lon: selectedPreview.lon,
       note,
@@ -228,9 +229,10 @@ $('#manual-save').addEventListener('click', async () => {
 });
 
 // --- Modal ---
+let galleryImages = [];
+let galleryIdx = 0;
+
 function openModal(loc) {
-  $('#modal-img').src = loc.image_url || '';
-  $('#modal-img').style.display = loc.image_url ? '' : 'none';
   $('#modal-title').textContent = loc.name;
   $('#modal-desc').textContent = loc.description || '';
   $('#modal-note').textContent = loc.note || '';
@@ -241,6 +243,15 @@ function openModal(loc) {
   } else {
     $('#modal-map').classList.add('hidden');
   }
+
+  galleryImages = [];
+  if (loc.image_url) galleryImages.push(loc.image_url);
+  if (loc.image_urls && Array.isArray(loc.image_urls)) {
+    loc.image_urls.forEach((u) => { if (!galleryImages.includes(u)) galleryImages.push(u); });
+  }
+
+  galleryIdx = 0;
+  renderGallery();
 
   $('#modal-delete').onclick = async () => {
     if (!confirm('Delete this card?')) return;
@@ -253,6 +264,48 @@ function openModal(loc) {
   $('#modal').dataset.id = loc.id;
 }
 
+function renderGallery() {
+  const imgs = $('#modal-img');
+  const gallery = $('#modal-gallery');
+  const dots = $('.gallery-dots');
+
+  if (galleryImages.length === 0) {
+    gallery.style.display = 'none';
+    return;
+  }
+
+  gallery.style.display = '';
+  imgs.src = galleryImages[galleryIdx];
+
+  dots.innerHTML = galleryImages.length > 1
+    ? galleryImages.map((_, i) =>
+        `<span class="dot ${i === galleryIdx ? 'active' : ''}" data-i="${i}"></span>`
+      ).join('')
+    : '';
+
+  $('.gallery-prev').style.display = galleryImages.length > 1 ? '' : 'none';
+  $('.gallery-next').style.display = galleryImages.length > 1 ? '' : 'none';
+
+  dots.querySelectorAll('.dot').forEach((d) => {
+    d.addEventListener('click', () => {
+      galleryIdx = parseInt(d.dataset.i);
+      renderGallery();
+    });
+  });
+}
+
+$('.gallery-prev').addEventListener('click', (e) => {
+  e.stopPropagation();
+  galleryIdx = (galleryIdx - 1 + galleryImages.length) % galleryImages.length;
+  renderGallery();
+});
+
+$('.gallery-next').addEventListener('click', (e) => {
+  e.stopPropagation();
+  galleryIdx = (galleryIdx + 1) % galleryImages.length;
+  renderGallery();
+});
+
 function closeModal() {
   $('#modal').classList.add('hidden');
 }
@@ -261,6 +314,14 @@ $('.modal-overlay').addEventListener('click', closeModal);
 $('.modal-close').addEventListener('click', closeModal);
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('#modal').classList.contains('hidden')) closeModal();
+  if (e.key === 'ArrowLeft' && !$('#modal').classList.contains('hidden') && galleryImages.length > 1) {
+    galleryIdx = (galleryIdx - 1 + galleryImages.length) % galleryImages.length;
+    renderGallery();
+  }
+  if (e.key === 'ArrowRight' && !$('#modal').classList.contains('hidden') && galleryImages.length > 1) {
+    galleryIdx = (galleryIdx + 1) % galleryImages.length;
+    renderGallery();
+  }
 });
 
 // --- Helpers ---

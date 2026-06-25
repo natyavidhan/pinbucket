@@ -1,4 +1,5 @@
 import sqlite3
+import json
 import requests
 from flask import Flask, request, jsonify, render_template
 
@@ -14,11 +15,16 @@ def init_db():
         name TEXT NOT NULL,
         description TEXT,
         image_url TEXT,
+        image_urls TEXT,
         lat REAL,
         lon REAL,
         note TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+    try:
+        c.execute('ALTER TABLE locations ADD COLUMN image_urls TEXT')
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -63,10 +69,29 @@ def preview():
 
     data = resp.json()
 
+    image_urls = []
+    try:
+        media_resp = requests.get(
+            f'https://en.wikipedia.org/api/rest_v1/page/media-list/{title}',
+            headers={'User-Agent': WIKI_UA}, timeout=10
+        )
+        if media_resp.status_code == 200:
+            media_data = media_resp.json()
+            for item in media_data.get('items', []):
+                if item.get('type') == 'image' and item.get('showInGallery', True):
+                    srcset = item.get('srcset', [])
+                    if srcset:
+                        url = 'https:' + srcset[0]['src']
+                        if url not in image_urls:
+                            image_urls.append(url)
+    except Exception:
+        pass
+
     return jsonify({
         'title': data.get('title', title),
         'description': data.get('extract', ''),
         'image_url': data.get('thumbnail', {}).get('source', ''),
+        'image_urls': image_urls,
         'lat': data.get('coordinates', {}).get('lat'),
         'lon': data.get('coordinates', {}).get('lon'),
     })
@@ -80,7 +105,18 @@ def locations():
         c.execute('SELECT * FROM locations ORDER BY created_at DESC')
         rows = c.fetchall()
         conn.close()
-        return jsonify([dict(r) for r in rows])
+        results = []
+        for r in rows:
+            d = dict(r)
+            if d.get('image_urls'):
+                try:
+                    d['image_urls'] = json.loads(d['image_urls'])
+                except (json.JSONDecodeError, TypeError):
+                    d['image_urls'] = []
+            else:
+                d['image_urls'] = []
+            results.append(d)
+        return jsonify(results)
 
     data = request.get_json()
     if not data or not data.get('name'):
@@ -88,11 +124,12 @@ def locations():
 
     conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('''INSERT INTO locations (name, description, image_url, lat, lon, note)
-                 VALUES (?, ?, ?, ?, ?, ?)''',
+    urls = data.get('image_urls', [])
+    c.execute('''INSERT INTO locations (name, description, image_url, image_urls, lat, lon, note)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)''',
               (data['name'], data.get('description', ''),
-               data.get('image_url', ''), data.get('lat'),
-               data.get('lon'), data.get('note', '')))
+               data.get('image_url', ''), json.dumps(urls),
+               data.get('lat'), data.get('lon'), data.get('note', '')))
     conn.commit()
     location_id = c.lastrowid
     conn.close()
