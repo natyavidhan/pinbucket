@@ -513,6 +513,22 @@ $('#identify-dropzone').addEventListener('drop', (e) => {
   addFiles(e.dataTransfer.files);
 });
 
+document.addEventListener('paste', (e) => {
+  if ($('#tab-identify').classList.contains('hidden')) return;
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  const files = [];
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      files.push(item.getAsFile());
+    }
+  }
+  if (files.length > 0) {
+    e.preventDefault();
+    addFiles(files);
+  }
+});
+
 function addFiles(fileList) {
   const newFiles = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
   if (identifyFiles.length + newFiles.length > 5) {
