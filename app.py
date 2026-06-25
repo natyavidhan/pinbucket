@@ -4,11 +4,11 @@ import requests
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
-DB = 'locations.db'
+app.config.setdefault('DB_PATH', 'locations.db')
 WIKI_UA = 'Pinbucket/1.0 (personal use; github.com)'
 
 def init_db():
-    conn = sqlite3.connect(DB)
+    conn = sqlite3.connect(app.config['DB_PATH'])
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS locations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -107,7 +107,7 @@ def preview():
 @app.route('/api/locations', methods=['GET', 'POST'])
 def locations():
     if request.method == 'GET':
-        conn = sqlite3.connect(DB)
+        conn = sqlite3.connect(app.config['DB_PATH'])
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
         c.execute('SELECT * FROM locations ORDER BY created_at DESC')
@@ -126,7 +126,7 @@ def locations():
     if not data or not data.get('name'):
         return jsonify({'error': 'Name is required'}), 400
 
-    conn = sqlite3.connect(DB)
+    conn = sqlite3.connect(app.config['DB_PATH'])
     c = conn.cursor()
     urls = data.get('image_urls', [])
     tags = data.get('tags', [])
@@ -145,7 +145,7 @@ def locations():
 @app.route('/api/locations/<int:id>', methods=['DELETE', 'PUT'])
 def single_location(id):
     if request.method == 'DELETE':
-        conn = sqlite3.connect(DB)
+        conn = sqlite3.connect(app.config['DB_PATH'])
         c = conn.cursor()
         c.execute('DELETE FROM locations WHERE id = ?', (id,))
         conn.commit()
@@ -153,7 +153,7 @@ def single_location(id):
         return jsonify({'status': 'ok'})
 
     data = request.get_json()
-    conn = sqlite3.connect(DB)
+    conn = sqlite3.connect(app.config['DB_PATH'])
     c = conn.cursor()
 
     updates = []
@@ -196,6 +196,15 @@ def _parse_json(val, default):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+_db_initialized = False
+
+@app.before_request
+def _ensure_db():
+    global _db_initialized
+    if not _db_initialized:
+        init_db()
+        _db_initialized = True
 
 if __name__ == '__main__':
     init_db()

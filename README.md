@@ -8,15 +8,14 @@ Instagram is full of beautiful places — fjords in Norway, mountains in Kazakhs
 
 No accounts. No API keys. No scraping Instagram. Just Wikipedia's free REST API doing the heavy lifting.
 
-### How it works
+### What you get
 
-1. Type the name of a place (e.g. "Trolltunga Norway")
-2. Pick from a dropdown of Wikipedia matches
-3. Wikipedia auto-fills the image, description, and coordinates
-4. Add a personal note if you want ("saw this in June 2026")
-5. Save — it lands on your board
-
-If Wikipedia doesn't have the place, there's a manual fallback where you can paste a name, image URL, and description yourself.
+- **Wikipedia-powered cards** — type a place name, pick from 5 search results, and Wikipedia auto-fills the image, description, and coordinates. Multiple images are pulled from the Wikipedia media gallery so you can flip through them in the modal.
+- **Pinterest-style board** — full-image cards with a gradient overlay and place name. Hover to reveal the description and your notes. Pure CSS masonry grid, responsive down to single-column on phones.
+- **Tags & references** — tag places with things like "hiking", "norway", "waterfall". Save the Instagram Reel URL (or TikTok, YouTube, whatever) as a reference so you can find it later.
+- **Dark mode** — toggle in the header, sticks between sessions.
+- **Manual fallback** — if Wikipedia doesn't have your place, fill in the name, image URL, and description yourself.
+- **Everything is editable** — click any card to open the full view, then hit Edit to change tags, references, or your note anytime.
 
 ### Running it
 
@@ -25,8 +24,28 @@ pip install flask requests
 python app.py
 ```
 
-Opens on `localhost:5000`. That's it.
+Opens on `localhost:9875`.
+
+### Running the tests
+
+```bash
+pip install pytest
+python -m pytest tests/ -v
+```
+
+23 tests covering search, preview, CRUD, tags, references, partial updates, edge cases. No network calls — all Wikipedia requests are mocked.
 
 ### Stack
 
 Flask + SQLite + vanilla HTML/CSS/JS. No frameworks, no build step, no npm. Just a couple of Python dependencies and a handful of static files.
+
+### API
+
+| Endpoint | What it does |
+|---|---|
+| `GET /api/search?q=...` | Wikipedia search, returns 5 candidates |
+| `GET /api/preview?title=...` | Wikipedia summary + media gallery for a title |
+| `GET /api/locations` | All saved cards |
+| `POST /api/locations` | Save a card (with tags, refs, image_urls) |
+| `PUT /api/locations/<id>` | Edit tags, references, note, or other fields |
+| `DELETE /api/locations/<id>` | Remove a card |
