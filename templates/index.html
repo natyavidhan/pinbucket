@@ -30,6 +30,12 @@
             <span id="preview-coords"></span>
             <a id="preview-map" href="#" target="_blank" class="map-link hidden">Open in maps</a>
           </div>
+          <input type="text" id="preview-tags" placeholder="Tags: hiking, norway, waterfall">
+          <div class="refs-section">
+            <input type="text" id="preview-ref-input" placeholder="Reel / reference URL">
+            <button id="preview-ref-add" class="btn-secondary" style="padding:8px 14px;font-size:13px;">+ Add</button>
+          </div>
+          <div id="preview-refs" class="refs-list"></div>
           <textarea id="preview-note" placeholder="Add a personal note..." rows="2"></textarea>
           <div class="preview-actions">
             <button id="save-btn" class="btn-primary">Save to board</button>
@@ -48,6 +54,12 @@
         <input type="text" id="manual-lat" placeholder="Latitude (optional)">
         <input type="text" id="manual-lon" placeholder="Longitude (optional)">
       </div>
+      <input type="text" id="manual-tags" placeholder="Tags: hiking, waterfall, europe">
+      <div class="refs-section">
+        <input type="text" id="manual-ref-input" placeholder="Reel / reference URL">
+        <button id="manual-ref-add" class="btn-secondary" style="padding:8px 14px;font-size:13px;">+ Add</button>
+      </div>
+      <div id="manual-refs" class="refs-list"></div>
       <textarea id="manual-note" placeholder="Personal note (optional)" rows="2"></textarea>
       <button id="manual-save" class="btn-primary">Save</button>
       <button id="cancel-manual" class="btn-secondary">Cancel</button>
@@ -69,12 +81,27 @@
       </div>
       <div class="modal-body">
         <h2 id="modal-title"></h2>
+        <div id="modal-tags" class="tag-list"></div>
         <p id="modal-desc"></p>
         <div class="modal-meta">
           <a id="modal-map" href="#" target="_blank" class="map-link hidden">Open in maps</a>
         </div>
+        <div id="modal-refs" class="modal-refs"></div>
         <p id="modal-note" class="modal-note"></p>
-        <button id="modal-delete" class="btn-danger">Delete</button>
+        <div id="modal-edit" class="modal-edit hidden">
+          <input type="text" id="modal-edit-tags" placeholder="Tags: hiking, norway, waterfall">
+          <div class="refs-section">
+            <input type="text" id="modal-edit-ref-input" placeholder="Reel / reference URL">
+            <button id="modal-edit-ref-add" class="btn-secondary" style="padding:8px 14px;font-size:13px;">+ Add</button>
+          </div>
+          <div id="modal-edit-refs" class="refs-list"></div>
+          <textarea id="modal-edit-note" placeholder="Personal note" rows="2"></textarea>
+          <button id="modal-edit-save" class="btn-primary">Save changes</button>
+        </div>
+        <div class="modal-actions">
+          <button id="modal-edit-btn" class="btn-secondary">Edit</button>
+          <button id="modal-delete" class="btn-danger">Delete</button>
+        </div>
       </div>
     </div>
   </div>

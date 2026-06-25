@@ -25,6 +25,14 @@ def init_db():
         c.execute('ALTER TABLE locations ADD COLUMN image_urls TEXT')
     except sqlite3.OperationalError:
         pass
+    try:
+        c.execute('ALTER TABLE locations ADD COLUMN tags TEXT')
+    except sqlite3.OperationalError:
+        pass
+    try:
+        c.execute('ALTER TABLE locations ADD COLUMN refs TEXT')
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -108,13 +116,9 @@ def locations():
         results = []
         for r in rows:
             d = dict(r)
-            if d.get('image_urls'):
-                try:
-                    d['image_urls'] = json.loads(d['image_urls'])
-                except (json.JSONDecodeError, TypeError):
-                    d['image_urls'] = []
-            else:
-                d['image_urls'] = []
+            d['image_urls'] = _parse_json(d.get('image_urls'), [])
+            d['tags'] = _parse_json(d.get('tags'), [])
+            d['refs'] = _parse_json(d.get('refs'), [])
             results.append(d)
         return jsonify(results)
 
@@ -125,24 +129,69 @@ def locations():
     conn = sqlite3.connect(DB)
     c = conn.cursor()
     urls = data.get('image_urls', [])
-    c.execute('''INSERT INTO locations (name, description, image_url, image_urls, lat, lon, note)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)''',
+    tags = data.get('tags', [])
+    refs = data.get('refs', [])
+    c.execute('''INSERT INTO locations (name, description, image_url, image_urls, tags, refs, lat, lon, note)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
               (data['name'], data.get('description', ''),
                data.get('image_url', ''), json.dumps(urls),
+               json.dumps(tags), json.dumps(refs),
                data.get('lat'), data.get('lon'), data.get('note', '')))
     conn.commit()
     location_id = c.lastrowid
     conn.close()
     return jsonify({'status': 'ok', 'id': location_id}), 201
 
-@app.route('/api/locations/<int:id>', methods=['DELETE'])
-def delete_location(id):
+@app.route('/api/locations/<int:id>', methods=['DELETE', 'PUT'])
+def single_location(id):
+    if request.method == 'DELETE':
+        conn = sqlite3.connect(DB)
+        c = conn.cursor()
+        c.execute('DELETE FROM locations WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'status': 'ok'})
+
+    data = request.get_json()
     conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute('DELETE FROM locations WHERE id = ?', (id,))
-    conn.commit()
+
+    updates = []
+    values = []
+
+    for field in ['name', 'description', 'image_url', 'note']:
+        if field in data:
+            updates.append(f'{field} = ?')
+            values.append(data[field])
+
+    for field in ['image_urls', 'tags', 'refs']:
+        if field in data:
+            updates.append(f'{field} = ?')
+            values.append(json.dumps(data[field]))
+
+    if 'lat' in data:
+        updates.append('lat = ?')
+        values.append(data['lat'])
+    if 'lon' in data:
+        updates.append('lon = ?')
+        values.append(data['lon'])
+
+    if updates:
+        values.append(id)
+        c.execute(f"UPDATE locations SET {', '.join(updates)} WHERE id = ?", values)
+        conn.commit()
+
     conn.close()
     return jsonify({'status': 'ok'})
+
+
+def _parse_json(val, default):
+    if not val:
+        return default
+    try:
+        return json.loads(val)
+    except (json.JSONDecodeError, TypeError):
+        return default
 
 @app.route('/')
 def index():

@@ -481,6 +481,148 @@ main {
 
 .modal-note:empty { display: none; }
 
+/* Tags on cards */
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.card-tag {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(2px);
+}
+
+/* Tag badges in modal */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tag-badge {
+  background: #fde8e8;
+  color: #c0392b;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 12px;
+}
+
+/* Reference section */
+.refs-section {
+  display: flex;
+  gap: 8px;
+}
+
+.refs-section input {
+  flex: 1;
+}
+
+.refs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ref-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e8f0fe;
+  border-radius: 14px;
+  padding: 4px 8px 4px 12px;
+  font-size: 12px;
+}
+
+.ref-link {
+  color: #1a73e8;
+  text-decoration: none;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ref-link:hover { text-decoration: underline; }
+
+.ref-remove {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.ref-remove:hover { color: #e54b4b; }
+
+/* Modal references */
+.modal-refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.modal-ref-link {
+  display: inline-block;
+  background: #e8f0fe;
+  color: #1a73e8;
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  text-decoration: none;
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-ref-link:hover { background: #d2e3fc; }
+
+.modal-ref-link:empty,
+.modal-refs:empty { display: none; }
+
+/* Modal edit form */
+.modal-edit {
+  border-top: 1px solid #eee;
+  margin-top: 14px;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-edit.hidden { display: none; }
+
+.modal-edit input,
+.modal-edit textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 /* Gallery / carousel */
 .modal-gallery {
   position: relative;
