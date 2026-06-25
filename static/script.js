@@ -473,5 +473,19 @@ function firstSentences(text, n) {
   return match ? match[0].trim() : text;
 }
 
+// --- Theme toggle ---
+function applyTheme(dark) {
+  document.body.classList.toggle('dark', dark);
+  $('#theme-toggle').textContent = dark ? '🌙' : '☀️';
+  localStorage.setItem('pinbucket-dark', dark ? '1' : '0');
+}
+
+const savedDark = localStorage.getItem('pinbucket-dark') === '1';
+applyTheme(savedDark);
+
+$('#theme-toggle').addEventListener('click', () => {
+  applyTheme(!document.body.classList.contains('dark'));
+});
+
 // --- Init ---
 loadBoard();
